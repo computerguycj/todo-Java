@@ -1,14 +1,15 @@
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import com.google.gson.Gson;
 
 public class ToDoItemManager {
 
@@ -54,7 +55,7 @@ public class ToDoItemManager {
 
     public void markInProgress(int itemId) {
         //TODO: Handle invalid index
-        var item = items.get(itemId - 1)
+        var item = items.get(itemId - 1);
         item.status = 1;
         item.updatedAt = new Date();
         saveItems();
@@ -69,35 +70,48 @@ public class ToDoItemManager {
     }
 
     private List<ToDoItem> loadItems() {
-        // Handle no file (by returning an empty list)
-        // if (!Files.exists(Path.of(path))) {
-            return new ArrayList<ToDoItem>();
-        // }
-
-        //TODO: Implement custom-built reader
-        // var gson = new Gson();
-        // var br = new BufferedReader(new FileReader(path));
-        // var obj = gson.fromJson(br, ToDoItem[].class);
-        // if (status == -1 || status == 4) {
-        //     return obj;
-        // }
+        var ret = new ArrayList<ToDoItem>();
         
-        //TODO: Find a better way to return these. Maybe a yield return if possible.
-        // var items = new ArrayList<ToDoItem>();
-        // for (ToDoItem item : obj) {
-        //     if (item.status == status) {
-        //         items.add(item);
-        //     }
-        // }
-        // return items.toArray(new ToDoItem[0]);
+        // Handle no file (by returning an empty list)
+        if (!Files.exists(Path.of(path))) {
+            return ret;
+        }
+
+        var gson = new Gson();
+        BufferedReader br;
+        try {
+            br = new BufferedReader(new FileReader(path));
+            var obj = gson.fromJson(br, ToDoItem[].class);
+            if (null != obj) {
+                for (var item : obj) {
+                    ret.add(item);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return ret;
     }
 
-    //TODO: Genericize this to take a collection of items
     private void saveItems() {
-        //TODO: Implement custom-built writer
-        // var gson = new Gson();
-        // var w = new FileWriter(path);
-        // w.write(gson.toJson(items));
-        // w.close();
+        var gson = new Gson();
+        FileWriter w = null;
+        try {
+            w = new FileWriter(path);
+            w.write(gson.toJson(items));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            if (null != w) {
+                try {
+                    w.close();
+                } catch (IOException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+        }
     }
 }
